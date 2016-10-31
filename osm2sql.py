@@ -23,7 +23,8 @@ def database_create():
 					id varchar(20) not null primary key,\
 					lat double not null,\
 					lon double not null,\
-					point point\
+					point point,\
+					is_poi boolean default FALSE\
 		)')
 	cur.execute('create table way(\
 					id varchar(20) not null primary key\
