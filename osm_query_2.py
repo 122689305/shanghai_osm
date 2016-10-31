@@ -18,15 +18,14 @@ def database_close():
 database_connect()
 database_init()
 
-# set default node_id as test
-node_id = 1
-# TODO: accept the query as longitude and latitude or as the id of the node
+# set default way_id as test
+way_id = 1
+# TODO: accept the query as longitude and latitude or as the id of the way
 
-cur.execute('select way_id from way_node where node_id = %s')
+cur.execute('select id, lat, lon from node RIGHT JOIN (\
+	select node_id from way_node where way_id = %s) ON id = node_id', way_id)
+print 'node_id\t\tlat\t\tlon'
 for r in cur.fetchall():
-	print 'way_id: %s'%r.r['way_id']
-
-cur.execute('select count(way_id) from way_node where node_id = %s')
-# TODO: do we need to attach the tag info to the way?
+	print '%s\t\t%d\t\t%d'%(r['id'],r['lat'],r['lon']
 
 database_close()

@@ -18,15 +18,11 @@ def database_close():
 database_connect()
 database_init()
 
-# set default node_id as test
-node_id = 1
-# TODO: accept the query as longitude and latitude or as the id of the node
+# set default way_name as test
+way_name = 'xxx'
+# TODO: accept the query as longitude and latitude and show a list of possible ways
 
-cur.execute('select way_id from way_node where node_id = %s')
-for r in cur.fetchall():
-	print 'way_id: %s'%r.r['way_id']
-
-cur.execute('select count(way_id) from way_node where node_id = %s')
-# TODO: do we need to attach the tag info to the way?
+cur.execute('select way_id from way_tag where k = "name" and v like "%s"', '%'+way_name)
+# TODO: show more tags of the way_id returned
 
 database_close()
