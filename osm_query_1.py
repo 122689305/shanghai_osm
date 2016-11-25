@@ -1,6 +1,9 @@
 import MySQLdb as mysql
 import time
 
+conn = None
+cur = None
+
 def database_connect():
 	global conn, cur
 	conn = mysql.connect(host='localhost', user='root', passwd='0719', charset='utf8')
