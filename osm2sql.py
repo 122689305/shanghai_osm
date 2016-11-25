@@ -2,98 +2,65 @@
 # -*- coding=utf-8 -*-
 
 from lxml import etree
-import MySQLdb as mysql
+import pymysql
 import time
 
-conn = None
-cur = None
+
+def create_tables():
+    try:
+        cursor.execute('drop table if exists NodeTag, WayTag, WayNode, Node, Way')
+        cursor.execute('create table Node(\
+                        NodeID INT UNSIGNED not null primary key,\
+                        Lat double not null, INDEX (Lat),\
+                        Lon double not null, INDEX (Lon),\
+                        Pos point not null, SPATIAL INDEX (Pos),\
+                        IsPOI boolean default FALSE\
+                        ) ENGINE=MyISAM')
+        cursor.execute('create table Way(\
+                        WayID INT UNSIGNED not null primary key\
+                        ) ENGINE=MyISAM')
+        cursor.execute('create table NodeTag(\
+                        NodeID INT UNSIGNED not null,\
+                        K    varchar(200) not null, INDEX (k),\
+                        V    varchar(200) not null, INDEX (V),\
+                        foreign key(NodeID) references Node(NodeID)\
+                        ) ENGINE=MyISAM')
+        cursor.execute('create table WayTag(\
+                        WayID INT UNSIGNED not null,\
+                        K    varchar(200) not null, INDEX (k),\
+                        V    varchar(200) not null, INDEX (V),\
+                        foreign key(WayID) references Way(WayID)\
+                        ) ENGINE=MyISAM')
+        cursor.execute('create table WayNode(\
+                        WayID INT UNSIGNED not null,\
+                        NodeID INT UNSIGNED not null,\
+                        OrderNum INT not null,\
+                        foreign key(WayID) references Way(WayID),\
+                        foreign key(NodeID) references Node(NodeID)\
+                        ) ENGINE=MyISAM')
+    except Exception as e:
+        print(e)
+        raise e
+        connection.close()
+
+    # cur.execute('drop database if exists ShanghaiOsm')
+    # cur.execute('create database ShanghaiOsm default character set utf8 collate utf8_general_ci')
+    # conn.select_db('ShanghaiOsm')
 
 
-def database_connect():
-    global conn, cur
-    conn = mysql.connect(host='localhost', user='root', passwd='0719', charset='utf8')
-    cur = conn.cursor()
-    cur.execute('set names utf8')
-
-
-def database_init():
-    conn.select_db('shanghai_osm')
-
-
-def database_create():
-    cur.execute('drop database if exists shanghai_osm')
-    cur.execute('create database shanghai_osm default character set utf8 collate utf8_general_ci')
-    conn.select_db('shanghai_osm')
-    cur.execute('create table node(\
-                    id INT UNSIGNED(10) not null primary key,\
-                    lat double not null,\
-                    lon double not null,\
-                    point point,\
-                    is_poi boolean default FALSE\
-        )')
-    cur.execute('create table way(\
-                    id INT UNSIGNED(10) not null primary key\
-        )')
-    cur.execute('create table node_tag(\
-                    node_id INT UNSIGNED(10) not null,\
-                    k    varchar(255) not null,\
-                    v    varchar(255) not null,\
-                    foreign key(node_id) references node(id)\
-        )')
-    cur.execute('create table way_tag(\
-                    way_id INT UNSIGNED(10) not null,\
-                    k    varchar(255) not null,\
-                    v    varchar(255) not null,\
-                    foreign key(way_id) references way(id)\
-        )')
-    cur.execute('create table way_node(\
-                    way_id    INT UNSIGNED(10) not null,\
-                    node_id    INT UNSIGNED(10) not null,\
-                    foreign key(way_id) references way(id),\
-                    foreign key(node_id) references node(id)\
-        )')
-
-
-def database_close():
-    cur.close()
-    conn.close()
-
-
-def database_node_insert():
-    id = element.get('id')
-    lon = element.get('lon')
-    lat = element.get('lat')
-    cur.execute('insert into node(id, lat, lon) values(%s, %s, %s)', (id, lat, lon))
-    conn.commit()
-
-
-def database_way_insert():
-    id = element.get(id)
-    cur.execute('insert into way(id) values(%s)', id)
-    conn.commit()
-
-
-def database_node_tag_insert():
-    node_id = parent_element['id']
-    k = element.get('k')
-    v = element.get('v')
-    cur.execute('insert into node_tag(node_id, k, v) values(%s, %s, %s)', (node_id, k, v))
-    conn.commit()
-
-
-def database_way_tag_insert():
-    way_id = parent_element['id']
-    k = element.get('k')
-    v = element.get('v')
-    cur.execute('insert into way_tag(way_id, k, v) values(%s, %s, %s)', (way_id, k, v))
-    conn.commit()
-
-
-def database_way_node_insert():
-    way_id = parent_element['id']
-    node_id = element.get('ref')
-    cur.execute('insert into way_node(way_id, node_id) values(%s, %s)', (way_id, node_id))
-    conn.commit()
+def insert(command, format, values):
+    try:
+        formatted = [format % value for value in values]
+        for i in range(0, len(formatted), 10000):
+            # print(command + ','.join(formatted[i:i + 10000]))
+            cursor.execute(command + ','.join(formatted[i:i + 10000]))
+            print('insert %d to %d records' % (i, i + 10000))
+        connection.commit()
+    except Exception as e:
+        connection.rollback()
+        print(e)
+        raise e
+        connection.close()
 
 
 def parse_and_insert(xml):
@@ -104,7 +71,8 @@ def parse_and_insert(xml):
     for node in nodes:
         table_node.append((int(node.get('id')),
                            float(node.get('lat')),
-                           float(node.get('lon'))))
+                           float(node.get('lon')),
+                           'POINT(%s, %s)' % (node.get('lat'), node.get('lon'))))
     print('parse table node done')
     # table way
     table_way = []
@@ -117,8 +85,8 @@ def parse_and_insert(xml):
         node_id = int(node.get('id'))
         for tag in node.getchildren():
             table_node_tag.append((node_id,
-                                   tag.get('k'),
-                                   tag.get('v')))
+                                   connection.escape_string(tag.get('k')),
+                                   connection.escape_string(tag.get('v'))))
     print('parse table node_tag done')
     # table way_tag
     table_way_tag = []
@@ -127,54 +95,49 @@ def parse_and_insert(xml):
         for tag in way.getchildren():
             if tag.tag == 'tag':
                 table_way_tag.append((way_id,
-                                      tag.get('k'),
-                                      tag.get('v')))
+                                      connection.escape_string(tag.get('k')),
+                                      connection.escape_string(tag.get('v'))))
     print('parse table way_tag done')
     # table way_node
     table_way_node = []
     for way in ways:
         way_id = int(way.get('id'))
+        order = 0
         for nd in way.getchildren():
             if nd.tag == 'nd':
                 table_way_node.append((way_id,
-                                       int(nd.get('ref'))))
+                                       int(nd.get('ref')),
+                                       order))
+                order += 1
     print('parse table way_node done')
-    insert()
+    insert('insert into Node(NodeID, Lat, Lon, Pos) values ', '(%d, %f, %f, %s)', table_node)
+    print('insert into Node done')
+    insert('insert into Way(WayID) values ', '(%d)', table_way)
+    print('insert into Way done')
+    insert('insert into NodeTag(NodeID, K, V) values ', '(%d, \'%s\', \'%s\')', table_node_tag)
+    print('insert into NodeTag done')
+    insert('insert into WayTag(WayID, K, V) values ', '(%d, \'%s\', \'%s\')', table_way_tag)
+    print('insert into WayTag done')
+    insert('insert into WayNode(WayID, NodeID, OrderNum) values ', '(%d, %d, %d)', table_way_node)
+    print('insert into WayNode done')
+
 
 if __name__ == '__main__':
-
-    database_connect()
-    database_create()
-    database_init()
-
+    print('start')
+    connection = pymysql.connect(host='127.0.0.1',
+                                 user='dbproject',
+                                 password='tycjytzp',
+                                 db='ShanghaiOsm',
+                                 charset='utf8mb4',
+                                 port=3306,
+                                 cursorclass=pymysql.cursors.DictCursor)
+    cursor = connection.cursor()
+    print('connected')
+    create_tables()
     begin_time = time.time()
     XML = etree.parse(open('shanghai_dump.osm', encoding='utf-8'))
+    print('loaded')
     parse_and_insert(XML)
-    database_close()
-parent_element = {}
-for event, element in tree:
-    if event == 'start' and element.tag == 'node':
-        parent_element['type'] = 'node'
-        parent_element['id'] = element.get('id')
-        database_node_insert()
-        continue
-    if event == 'start' and element.tag == 'way':
-        parent_element['type'] = 'way'
-        parent_element['id'] = element.get('id')
-        database_way_insert()
-        continue
-    if event == 'end' and element.tag == 'tag':
-        if parent_element['type'] == 'node':
-            database_node_tag_insert()
-            continue
-        if parent_element['type'] == 'way':
-            database_way_tag_insert()
-            continue
-        continue
-    if event == 'end' and element.tag == 'nd':
-        database_way_node_insert()
-        continue
-    if element.tag == 'relation':
-        break
-end_time = time.time()
-print('elapsed: %f' % (begin_time - end_time))
+
+    cursor.close()
+    connection.close()
