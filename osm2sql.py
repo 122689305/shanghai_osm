@@ -219,8 +219,8 @@ if __name__ == '__main__':
     # create_tables()
     begin_time = time.time()
     print('loaded')
-    print(time.strftime('%H:%M:%S', time.gmtime(time.time()-begin_time)))
     # parse_and_insert('shanghai_dump.osm')
 
     cursor.close()
     connection.close()
+    print(time.strftime('%H:%M:%S', time.gmtime(time.time()-begin_time)))
