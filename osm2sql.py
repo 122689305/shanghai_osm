@@ -65,6 +65,7 @@ def enable_index(tables):
 def create_index(tableANDkeys):
     for (table, key) in tableANDkeys:
         cursor.execute('CREATE INDEX %s ON %s (%s)'%(table+'_'+key.replace(',','_'), table, key))
+        print('create index %s for table %s with key %s done' % (table+'_'+key.replace(',','_'), table, key))
 
 def insert(table, command, format, values):
     try:
@@ -158,11 +159,13 @@ def parse_and_insert(filename):
     print('parse table way_tag done')
     print('parse table way_node done')
     enable_index(tables)
-    create_index()
+    create_index(index_tables)
 
 def get_database_connection():
     f = open('config/default.ini')
-    (host, port, usre, password) = tuple(f.readlines())
+    (host, port, user, password) = tuple([word.strip() for word in f.readlines()])
+    port = int(port)
+    print (host, port, user, password)
     return pymysql.connect(host=host,
                              user=user,
                              password=password,
@@ -170,7 +173,7 @@ def get_database_connection():
                              charset='utf8mb4',
                              port=port,
                              cursorclass=pymysql.cursors.DictCursor)
-    
+
 if __name__ == '__main__':
     print('start')
     connection =  get_database_connection()
