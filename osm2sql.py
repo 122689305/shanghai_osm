@@ -203,7 +203,7 @@ def parse_and_insert(filename):
     print('parse table way done')
     print('parse table way_tag done')
     print('parse table way_node done')
-    # enable_index(tables)
+    enable_index(tables)
     # create_index(index_tables)
 
 def get_database_connection():
@@ -224,10 +224,11 @@ if __name__ == '__main__':
     connection =  get_database_connection()
     cursor = connection.cursor()
     print('connected')
-    create_tables()
+    # create_tables()
     begin_time = time.time()
     print('loaded')
-    parse_and_insert('shanghai_dump.osm')
+    print(time.strftime('%H:%M:%S', time.gmtime(time.time()-begin_time)))
+    # parse_and_insert('shanghai_dump.osm')
 
     cursor.close()
     connection.close()
