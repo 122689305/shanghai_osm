@@ -62,7 +62,9 @@ def enable_index(tables):
         print('enable index for table %s done' % table)
     cursor.execute('UNLOCK TABLES')
 
-
+def create_index(tableANDkeys):
+    for (table, key) in tableANDkeys:
+        cursor.execute('CREATE INDEX %s ON %s (%s)'%(table+'_'+key.replace(',','_'), table, key))
 
 def insert(table, command, format, values):
     try:
@@ -78,7 +80,9 @@ def insert(table, command, format, values):
 
 
 def parse_and_insert(filename):
-    disable_index(['Node', 'Way', 'NodeTag', 'WayTag', 'WayNode'])
+    tables = ['Node', 'Way', 'NodeTag', 'WayTag', 'WayNode']
+    index_tables = [('WayNode', 'WayID'), ('WayNode', 'NodeID')]
+    disable_index(tables)
     table_node = []
     count_node = 0
     table_node_tag = []
@@ -153,18 +157,23 @@ def parse_and_insert(filename):
     print('parse table way done')
     print('parse table way_tag done')
     print('parse table way_node done')
-    enable_index(['Node', 'Way', 'NodeTag', 'WayTag', 'WayNode'])
+    enable_index(tables)
+    create_index()
 
-
+def get_database_connection():
+    f = open('config/default.ini')
+    (host, port, usre, password) = tuple(f.readlines())
+    return pymysql.connect(host=host,
+                             user=user,
+                             password=password,
+                             db='ShanghaiOsm',
+                             charset='utf8mb4',
+                             port=port,
+                             cursorclass=pymysql.cursors.DictCursor)
+    
 if __name__ == '__main__':
     print('start')
-    connection = pymysql.connect(host='127.0.0.1',
-                                 user='root',
-                                 password='5130309773',
-                                 db='ShanghaiOsm',
-                                 charset='utf8mb4',
-                                 port=3306,
-                                 cursorclass=pymysql.cursors.DictCursor)
+    connection =  get_database_connection()
     cursor = connection.cursor()
     print('connected')
     create_tables()
