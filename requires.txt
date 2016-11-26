@@ -1,0 +1,12 @@
+1. Given a node, return all ways that contain it, and infer whether the node is an intersection of roads, i.e., a crossroad.
+WayNode table, index(NodeID)
+2. Given a way, return all the nodes along the way.
+WayNode table, index(WayID)
+3. Search the name of the road and return information of those matched.
+RoadTag table, index(K), index(V)
+4. Query the POIs within a radius of a given location (longitude-latitude coordinates).
+Node table, index(Lat), index(Lon), index(Pos)
+5. Find the closest road to a given GPS coordinate.
+
+6. Implement an API to return the XML in osm format defined in the wiki page, given a
+rectangular area bounding box (x1, y2, x2, y2) as parameters.
