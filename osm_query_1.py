@@ -22,16 +22,42 @@ if __name__ == '__main__':
     print('connected')
 
     # set default node_id as test
-    node_id = 28111345
+    node_id = 3949788227
     # TODO: accept the query as longitude and latitude or as the id of the node
 
-    cursor.execute('select WayId from WayNode where NodeId = %d'%node_id)
-    for r in cursor.fetchall():
-    	print 'way_id: %s'%r['WayId']
+    cursor.execute('select * from (select * from WayNode where NodeID=%d) AS tmp natural join Way'%node_id)
+    way_list = cursor.fetchall()
+    print('%d ways'%len(way_list))
+    if len(way_list) > 1:
+        print('crossed')
+    for r in way_list:
+        r.pop('NodeID')
+        for item in r.items():
+            print(item)
+        print()
 
-    cursor.execute('select count(WayId) as cnt from WayNode where NodeId = %d'%node_id)
-    r = cursor.fetchone()
-    print r['cnt']
     # TODO: do we need to attach the tag info to the way?
+    # Done
 
     print(time.strftime('%H:%M:%S', time.gmtime(time.time()-begin_time)))
+
+
+
+'''
+mysql> select cnt, NodeID from (select count(*) as cnt, NodeID from WayNode group by NodeID) as cnt_table order by cnt desc limit 10;
++-----+------------+
+| cnt | NodeID     |
++-----+------------+
+|  16 | 3949788227 |
+|  14 | 3817255212 |
+|  14 | 4013081482 |
+|  14 | 3817255218 |
+|  14 | 3817255200 |
+|  14 | 3817255226 |
+|  11 | 4015124624 |
+|  11 | 4015124634 |
+|  11 | 4017878505 |
+|  11 | 4015124631 |
++-----+------------+
+10 rows in set (22.59 sec)
+'''
