@@ -4,6 +4,7 @@
 from lxml import etree
 import pymysql
 import time
+import sys
 
 
 def create_tables():
@@ -48,13 +49,26 @@ def create_tables():
     # conn.select_db('ShanghaiOsm')
 
 
-def insert(command, format, values):
+def disable_index(tables):
+    cursor.execute('LOCK TABLES %s' % ', '.join(['`%s` WRITE' % table for table in tables]))
+    for table in tables:
+        cursor.execute('/*!40000 ALTER TABLE `%s` DISABLE KEYS */' % table)
+        print('disable index for table %s done' % table)
+
+
+def enable_index(tables):
+    for table in tables:
+        cursor.execute('/*!40000 ALTER TABLE `%s` ENABLE KEYS */' % table)
+        print('enable index for table %s done' % table)
+    cursor.execute('UNLOCK TABLES')
+
+
+
+def insert(table, command, format, values):
     try:
         formatted = [format % value for value in values]
-        for i in range(0, len(formatted), 10000):
-            # print(command + ','.join(formatted[i:i + 10000]))
-            cursor.execute(command + ','.join(formatted[i:i + 10000]))
-            print('insert %d to %d records' % (i, i + 10000))
+        cursor.execute(command + ','.join(formatted))
+        # print('insert %d to %d records' % )
         connection.commit()
     except Exception as e:
         connection.rollback()
@@ -63,70 +77,90 @@ def insert(command, format, values):
         connection.close()
 
 
-def parse_and_insert(xml):
-    nodes = xml.findall('//node')
-    ways = xml.findall('//way')
-    # table node
+def parse_and_insert(filename):
+    disable_index(['Node', 'Way', 'NodeTag', 'WayTag', 'WayNode'])
     table_node = []
-    for node in nodes:
-        table_node.append((int(node.get('id')),
-                           float(node.get('lat')),
-                           float(node.get('lon')),
-                           'POINT(%s, %s)' % (node.get('lat'), node.get('lon'))))
-    print('parse table node done')
-    # table way
-    table_way = []
-    for way in ways:
-        table_way.append((int(way.get('id')),))
-    print('parse table way done')
-    # table node_tag
+    count_node = 0
     table_node_tag = []
-    for node in nodes:
-        node_id = int(node.get('id'))
-        for tag in node.getchildren():
-            table_node_tag.append((node_id,
-                                   connection.escape_string(tag.get('k')),
-                                   connection.escape_string(tag.get('v'))))
-    print('parse table node_tag done')
-    # table way_tag
+    count_node_tag = 0
+    table_way = []
+    count_way = 0
     table_way_tag = []
-    for way in ways:
-        way_id = int(way.get('id'))
-        for tag in way.getchildren():
-            if tag.tag == 'tag':
-                table_way_tag.append((way_id,
-                                      connection.escape_string(tag.get('k')),
-                                      connection.escape_string(tag.get('v'))))
-    print('parse table way_tag done')
-    # table way_node
+    count_way_tag = 0
     table_way_node = []
-    for way in ways:
-        way_id = int(way.get('id'))
-        order = 0
-        for nd in way.getchildren():
-            if nd.tag == 'nd':
-                table_way_node.append((way_id,
-                                       int(nd.get('ref')),
-                                       order))
-                order += 1
+    count_way_node = 0
+
+    for event, element in etree.iterparse(filename):
+        if element.tag == 'node':
+            # print(etree.tostring(element))
+            node_id = int(element.get('id'))
+            table_node.append((node_id,
+                               float(element.get('lat')),
+                               float(element.get('lon')),
+                               'POINT(%s, %s)' % (element.get('lat'), element.get('lon'))))
+            for tag in element.getchildren():
+                # print(tag.get('k'))
+                table_node_tag.append((node_id,
+                                       connection.escape_string(tag.get('k')),
+                                       connection.escape_string(tag.get('v'))))
+            element.clear()
+        elif element.tag == 'way':
+            way_id = int(element.get('id'))
+            table_way.append((way_id,))
+            for tag in element.getchildren():
+                if tag.tag == 'tag':
+                    table_way_tag.append((way_id,
+                                          connection.escape_string(tag.get('k')),
+                                          connection.escape_string(tag.get('v'))))
+            order = 0
+            for nd in element.getchildren():
+                if nd.tag == 'nd':
+                    table_way_node.append((way_id,
+                                           int(nd.get('ref')),
+                                           order))
+                    order += 1
+            element.clear()
+        if len(table_node) >= 10000:
+            insert('Node', 'insert into Node(NodeID, Lat, Lon, Pos) values ', '(%d, %f, %f, %s)', table_node)
+            count_node += len(table_node)
+            print('insert table node %d' % count_node)
+            sys.stdout.flush()
+            table_node = []
+        if len(table_node_tag) >= 10000:
+            insert('NodeTag', 'insert into NodeTag(NodeID, K, V) values ', '(%d, \'%s\', \'%s\')', table_node_tag)
+            count_node_tag += len(table_node_tag)
+            print('insert table node_tag %d' % count_node_tag)
+            sys.stdout.flush()
+            table_node_tag = []
+        if len(table_way) >= 10000:
+            insert('Way', 'insert into Way(WayID) values ', '(%d)', table_way)
+            count_way += len(table_way)
+            print('insert table way %d' % count_way)
+            sys.stdout.flush()
+            table_way = []
+        if len(table_way_tag) >= 10000:
+            insert('WayTag', 'insert into WayTag(WayID, K, V) values ', '(%d, \'%s\', \'%s\')', table_way_tag)
+            count_way_tag += len(table_way_tag)
+            print('insert table way_tag %d' % count_way_tag)
+            sys.stdout.flush()
+            table_way_tag = []
+        if len(table_way_node) >= 10000:
+            insert('WayNode', 'insert into WayNode(WayID, NodeID, OrderNum) values ', '(%d, %d, %d)', table_way_node)
+            count_way_node += len(table_way_node)
+            print('insert table way_node %d' % count_way_node)
+            sys.stdout.flush()
+            table_way_node = []
+    print('parse table way done')
+    print('parse table way_tag done')
     print('parse table way_node done')
-    insert('insert into Node(NodeID, Lat, Lon, Pos) values ', '(%d, %f, %f, %s)', table_node)
-    print('insert into Node done')
-    insert('insert into Way(WayID) values ', '(%d)', table_way)
-    print('insert into Way done')
-    insert('insert into NodeTag(NodeID, K, V) values ', '(%d, \'%s\', \'%s\')', table_node_tag)
-    print('insert into NodeTag done')
-    insert('insert into WayTag(WayID, K, V) values ', '(%d, \'%s\', \'%s\')', table_way_tag)
-    print('insert into WayTag done')
-    insert('insert into WayNode(WayID, NodeID, OrderNum) values ', '(%d, %d, %d)', table_way_node)
-    print('insert into WayNode done')
+    enable_index(['Node', 'Way', 'NodeTag', 'WayTag', 'WayNode'])
 
 
 if __name__ == '__main__':
     print('start')
     connection = pymysql.connect(host='127.0.0.1',
-                                 user='dbproject',
-                                 password='tycjytzp',
+                                 user='root',
+                                 password='5130309773',
                                  db='ShanghaiOsm',
                                  charset='utf8mb4',
                                  port=3306,
@@ -135,9 +169,8 @@ if __name__ == '__main__':
     print('connected')
     create_tables()
     begin_time = time.time()
-    XML = etree.parse(open('shanghai_dump.osm', encoding='utf-8'))
     print('loaded')
-    parse_and_insert(XML)
+    parse_and_insert('shanghai_dump.osm')
 
     cursor.close()
     connection.close()
