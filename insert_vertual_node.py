@@ -5,16 +5,23 @@ from lxml import etree
 import pymysql
 import time
 import sys
+from math import *
 
 if __name__ == '__main__':
     print('start')
-    connection = pymysql.connect(host='127.0.0.1',
-                                 user='root',
-                                 password='5130309773',
-                                 db='ShanghaiOsm',
-                                 charset='utf8mb4',
-                                 port=3306,
-                                 cursorclass=pymysql.cursors.DictCursor)
+    begin_time = time.time()
+    f = open('config/default.ini')
+    (host, port, user, password) = tuple([word.strip() for word in f.readlines()])
+    port = int(port)
+    print (host, port, user, password)
+    connection = pymysql.connect(host=host,
+                             user=user,
+                             password=password,
+                             db='ShanghaiOsm',
+                             charset='utf8mb4',
+                             port=port,
+                             cursorclass=pymysql.cursors.DictCursor)
+
     cursor = connection.cursor()
     cursor.execute("SELECT NodeID, Lat, Lon from Node")
     Node2Pos = {i['NodeID']: (i['Lat'], i['Lon']) for i in cursor.fetchall()}
@@ -60,3 +67,5 @@ if __name__ == '__main__':
     cursor.execute('UNLOCK TABLES')
     cursor.close()
     connection.close()
+
+    print(time.strftime('%H:%M:%S', time.gmtime(time.time()-begin_time)))
