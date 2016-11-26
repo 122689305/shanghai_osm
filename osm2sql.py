@@ -13,7 +13,7 @@ def create_tables():
         # cursor.execute('drop table if exists NodeTag, WayTag, WayNode, Node, Way')
         cursor.execute('drop table if exists WayNode, Node, Way')
         cursor.execute('create table Node(\
-                        NodeID INT UNSIGNED not null primary key,\
+                        NodeID BIGINT not null primary key,\
                         Lat double not null, INDEX (Lat),\
                         Lon double not null, INDEX (Lon),\
                         Pos point not null, SPATIAL INDEX (Pos),\
@@ -22,25 +22,25 @@ def create_tables():
                         IsPOI boolean default FALSE\
                         ) ENGINE=MyISAM')
         cursor.execute('create table Way(\
-                        WayID INT UNSIGNED not null primary key, \
+                        WayID BIGINT not null primary key, \
                         TagData JSON not null, \
                         Name varchar(200), INDEX(Name) \
                         ) ENGINE=MyISAM')
         # cursor.execute('create table NodeTag(\
-        #                 NodeID INT UNSIGNED not null,\
+        #                 NodeID BIGINT not null,\
         #                 K    varchar(200) not null, INDEX (k),\
         #                 V    varchar(200) not null, INDEX (V),\
         #                 foreign key(NodeID) references Node(NodeID)\
         #                 ) ENGINE=MyISAM')
         # cursor.execute('create table WayTag(\
-        #                 WayID INT UNSIGNED not null,\
+        #                 WayID BIGINT not null,\
         #                 K    varchar(200) not null, INDEX (k),\
         #                 V    varchar(200) not null, INDEX (V),\
         #                 foreign key(WayID) references Way(WayID)\
         #                 ) ENGINE=MyISAM')
         cursor.execute('create table WayNode(\
-                        WayID INT UNSIGNED not null, INDEX(WayID),\
-                        NodeID INT UNSIGNED not null, INDEX(NodeID),\
+                        WayID BIGINT not null, INDEX(WayID),\
+                        NodeID BIGINT not null, INDEX(NodeID),\
                         OrderNum INT not null,\
                         foreign key(WayID) references Way(WayID),\
                         foreign key(NodeID) references Node(NodeID)\
@@ -49,10 +49,6 @@ def create_tables():
         print(e)
         raise e
         connection.close()
-
-    # cur.execute('drop database if exists ShanghaiOsm')
-    # cur.execute('create database ShanghaiOsm default character set utf8 collate utf8_general_ci')
-    # conn.select_db('ShanghaiOsm')
 
 
 def disable_index(tables):
@@ -68,10 +64,6 @@ def enable_index(tables):
         print('enable index for table %s done' % table)
     cursor.execute('UNLOCK TABLES')
 
-# def create_index(tableANDkeys):
-#     for (table, key) in tableANDkeys:
-#         cursor.execute('CREATE INDEX %s ON %s (%s)'%(table+'_'+key.replace(',','_'), table, key))
-#         print('create index %s for table %s with key %s done' % (table+'_'+key.replace(',','_'), table, key))
 
 def insert(table, command, format, values):
     try:
