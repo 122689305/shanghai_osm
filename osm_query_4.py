@@ -24,41 +24,39 @@ if __name__ == '__main__':
     print('connected')
 
     location = {'Lat':31.218899, 'Lon':121.413458}
-    radius = 0.1 # km with units as 111.045
+    radius = 10 # km with units as 111.045
     # radius = 10 # mile with units as 69.0
 
     cursor.execute('SET @latpoint=%f, @longpoint=%f, @r=%f, @units=111.045'%(location['Lat'], location['Lon'], radius) )
     cursor.execute('''
-    SELECT NodeID, Lat, Lon, Name, TagData FROM (
-      SELECT NodeID, Lat, Lon, Name, TagData,
-              @units * DEGREES( ACOS(
-                         COS(RADIANS(@latpoint)) 
-                       * COS(RADIANS(Lat)) 
-                       * COS(RADIANS(@longpoint) - RADIANS(Lon)) 
-                       + SIN(RADIANS(@latpoint)) 
-                       * SIN(RADIANS(Lat)))) AS distance
-      FROM Node
-      WHERE MbrContains(ST_GeomFromText (
-              CONCAT('LINESTRING(',
-                    @latpoint-(@r/@units),' ',
-                    @longpoint-(@r /(@units* COS(RADIANS(@latpoint)))),
-                    ',', 
-                    @latpoint+(@r/@units) ,' ',
-                    @longpoint+(@r /(@units * COS(RADIANS(@latpoint)))),
-                    ')')),  Pos)
-        AND IsPOI = True
-      ) AS d
-    WHERE distance < @r
+    SELECT NodeID, Lat, Lon, Name, TagData,
+            @units * DEGREES( ACOS(
+                       COS(RADIANS(@latpoint)) 
+                     * COS(RADIANS(Lat)) 
+                     * COS(RADIANS(@longpoint) - RADIANS(Lon)) 
+                     + SIN(RADIANS(@latpoint)) 
+                     * SIN(RADIANS(Lat)))) AS distance
+    FROM Node
+    WHERE MbrContains(ST_GeomFromText (
+            CONCAT('LINESTRING(',
+                  @latpoint-(@r/@units),' ',
+                  @longpoint-(@r /(@units* COS(RADIANS(@latpoint)))),
+                  ',', 
+                  @latpoint+(@r/@units) ,' ',
+                  @longpoint+(@r /(@units * COS(RADIANS(@latpoint)))),
+                  ')')),  Pos)
+      AND IsPOI = True
+    HAVING distance < @r
     ORDER BY distance DESC
     ''')
 
     node_list = cursor.fetchall()
     print('search Lat:%f Lon:%f with raidus %f km'%(location['Lat'], location['Lon'], radius))
     print('%d nodes'%len(node_list))
-    for r in node_list:
-        for key, value in r.items():
-            print('%s\t%s'%(key,value))
-        print('')
+    # for r in node_list:
+    #     for key, value in r.items():
+    #         print('%s\t%s'%(key,value))
+    #     print('')
 
     print(datetime.datetime.now() - begin_mtime)
 
@@ -93,6 +91,30 @@ size: 7391 nodes
 radius: 10 km
 speed: 25.558 s
 size: 369236 nodes
+'''
+
+'''
+optimized query:
+
+Lat: 31.218899
+Lon: 121.413458
+
+radius: 0.03 km
+speed: 0.044 ms
+nodes: 2 nodes
+
+radius: 0.1 km
+speed: 0.053 s
+size: 91 nodes
+
+radius: 1 km 
+speed: 0.657 s
+size: 7391 nodes
+
+radius: 10 km
+speed: 49.272 s
+size: 369236 nodes
+
 
 '''
 
