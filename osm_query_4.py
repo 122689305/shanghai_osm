@@ -27,33 +27,30 @@ if __name__ == '__main__':
     radius = 0.1 # km with units as 111.045
     # radius = 10 # mile with units as 69.0
 
+    cursor.execute('SET @latpoint=%f, @longpoint=%f, @r=%f, @units=111.045'%(location['Lat'], location['Lon'], radius) )
     cursor.execute('''
     SELECT NodeID, Lat, Lon, Name, TagData FROM (
-      SELECT NodeID, Lat, Lon, Name, TagData, r,
-              units * DEGREES( ACOS(
-                         COS(RADIANS(latpoint)) 
+      SELECT NodeID, Lat, Lon, Name, TagData,
+              @units * DEGREES( ACOS(
+                         COS(RADIANS(@latpoint)) 
                        * COS(RADIANS(Lat)) 
-                       * COS(RADIANS(longpoint) - RADIANS(Lon)) 
-                       + SIN(RADIANS(latpoint)) 
+                       * COS(RADIANS(@longpoint) - RADIANS(Lon)) 
+                       + SIN(RADIANS(@latpoint)) 
                        * SIN(RADIANS(Lat)))) AS distance
-         FROM Node
-         JOIN (
-              SELECT %f  AS latpoint,  %f AS longpoint, 
-                     %f AS r, 111.045 AS units
-              ) AS p ON (1=1)
-        WHERE MbrContains(ST_GeomFromText (
+      FROM Node
+      WHERE MbrContains(ST_GeomFromText (
               CONCAT('LINESTRING(',
-                    latpoint-(r/units),' ',
-                    longpoint-(r /(units* COS(RADIANS(latpoint)))),
+                    @latpoint-(@r/@units),' ',
+                    @longpoint-(@r /(@units* COS(RADIANS(@latpoint)))),
                     ',', 
-                    latpoint+(r/units) ,' ',
-                    longpoint+(r /(units * COS(RADIANS(latpoint)))),
+                    @latpoint+(@r/@units) ,' ',
+                    @longpoint+(@r /(@units * COS(RADIANS(@latpoint)))),
                     ')')),  Pos)
-              and IsPOI = True
-      ) as d
-    WHERE d.distance < d.r
-    ORDER BY d.distance DESC
-    '''%(location['Lat'], location['Lon'], radius))
+        AND IsPOI = True
+      ) AS d
+    WHERE distance < @r
+    ORDER BY distance DESC
+    ''')
 
     node_list = cursor.fetchall()
     print('search Lat:%f Lon:%f with raidus %f km'%(location['Lat'], location['Lon'], radius))
