@@ -24,7 +24,7 @@ if __name__ == '__main__':
     print('connected')
 
     location = {'Lat':31.218899, 'Lon':121.413458}
-    radius = 1 # km with units as 111.045
+    radius = 0.1 # km with units as 111.045
     # radius = 10 # mile with units as 69.0
 
     cursor.execute('''

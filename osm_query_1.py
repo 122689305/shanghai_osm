@@ -33,9 +33,8 @@ if __name__ == '__main__':
     if len(way_list) > 1:
         print('crossed')
     for r in way_list:
-        r.pop('NodeID')
-        for item in r.items():
-            print(item)
+        for key, value in r.items():
+            print('%s\t%s'%(key,value))
         print('')
 
     # TODO: do we need to attach the tag info to the way?

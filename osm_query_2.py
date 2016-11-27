@@ -27,13 +27,12 @@ if __name__ == '__main__':
     WayID = 234483672
     # TODO: accept the query as longitude and latitude or as the id of the way
 
-    cursor.execute('select * from (select NodeID from WayNode where WayID=%d) AS tmp natural join Node'%WayID)
+    cursor.execute('SELECT NodeID, Lat, Lon, TagData FROM (SELECt NodeID,OrderNum FROM WayNode WHERE WayID=%d) AS tmp NATURAL JOIN Node ORDER BY OrderNum ASC'%WayID)
     node_list = cursor.fetchall()
     print('%d nodes'%len(node_list))
     for r in node_list:
-        r.pop('WayID')
-        for item in r.items():
-            print(item)
+        for key, value in r.items():
+            print('%s\t%s'%(key,value))
         print('')
 
     # TODO: do we need to attach the tag info to the way?
