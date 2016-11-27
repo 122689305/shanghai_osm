@@ -1,61 +1,103 @@
-import MySQLdb as mysql
-import time
+# -*- coding=utf-8 -*-
+import pymysql
+import datetime
+import sys
 
-conn = None
-cur = None
+def get_database_connection():
+    f = open('config/default.ini')
+    (host, port, user, password) = tuple([word.strip() for word in f.readlines()])
+    port = int(port)
+    print (host, port, user, password)
+    return pymysql.connect(host=host,
+                             user=user,
+                             password=password,
+                             db='ShanghaiOsm',
+                             charset='utf8mb4',
+                             port=port,
+                             cursorclass=pymysql.cursors.DictCursor)
 
-def database_connect():
-	global conn, cur
-	conn = mysql.connect(host='localhost', user='root', passwd='0719', charset='utf8')
-	cur = conn.cursor()
-	cur.execute('set names utf8')
+if __name__ == '__main__':
+    print('start')
+    begin_mtime = datetime.datetime.now()
+    connection =  get_database_connection()
+    cursor = connection.cursor()
+    print('connected')
 
-def database_init():
-	conn.select_db('shanghai_osm')
+    location = {'Lat':31.218899, 'Lon':121.413458}
+    radius = 1 # km with units as 111.045
+    # radius = 10 # mile with units as 69.0
 
-def database_close():
-	conn.commit()
-	cur.close()
-	conn.close()
+    cursor.execute('''
+    SELECT NodeID, Lat, Lon, Name, TagData FROM (
+      SELECT NodeID, Lat, Lon, Name, TagData, r,
+              units * DEGREES( ACOS(
+                         COS(RADIANS(latpoint)) 
+                       * COS(RADIANS(Lat)) 
+                       * COS(RADIANS(longpoint) - RADIANS(Lon)) 
+                       + SIN(RADIANS(latpoint)) 
+                       * SIN(RADIANS(Lat)))) AS distance
+         FROM Node
+         JOIN (
+              SELECT %f  AS latpoint,  %f AS longpoint, 
+                     %f AS r, 111.045 AS units
+              ) AS p ON (1=1)
+        WHERE MbrContains(ST_GeomFromText (
+              CONCAT('LINESTRING(',
+                    latpoint-(r/units),' ',
+                    longpoint-(r /(units* COS(RADIANS(latpoint)))),
+                    ',', 
+                    latpoint+(r/units) ,' ',
+                    longpoint+(r /(units * COS(RADIANS(latpoint)))),
+                    ')')),  Pos)
+              and IsPOI = True
+      ) as d
+    WHERE d.distance < d.r
+    ORDER BY d.distance DESC
+    '''%(location['Lat'], location['Lon'], radius))
 
-database_connect()
-database_init()
+    node_list = cursor.fetchall()
+    print('search Lat:%f Lon:%f with raidus %f km'%(location['Lat'], location['Lon'], radius))
+    print('%d nodes'%len(node_list))
+    for r in node_list:
+        for key, value in r.items():
+            print('%s\t%s'%(key,value))
+        print('')
 
-# set default way_name as test
-way_name = 'xxx'
-# TODO: accept the query as longitude and latitude and show a list of possible ways
+    print(datetime.datetime.now() - begin_mtime)
 
-cur.execute('''
-SELECT id, coordinates, name, r,
-        units * DEGREES( ACOS(
-                   COS(RADIANS(latpoint)) 
-                 * COS(RADIANS(X(coordinates))) 
-                 * COS(RADIANS(longpoint) - RADIANS(Y(coordinates))) 
-                 + SIN(RADIANS(latpoint)) 
-                 * SIN(RADIANS(X(coordinates))))) AS distance
-   FROM flags
-   JOIN (
-        SELECT 42.81  AS latpoint,  -70.81 AS longpoint, 
-               10.0 AS r, 69.0 AS units
-        ) AS p ON (1=1)
-  WHERE MbrContains(GeomFromText (
-        CONCAT('LINESTRING(',
-              latpoint-(r/units),' ',
-              longpoint-(r /(units* COS(RADIANS(latpoint)))),
-              ',', 
-              latpoint+(r/units) ,' ',
-              longpoint+(r /(units * COS(RADIANS(latpoint)))),
-              ')')),  coordinates)
-''')
-
-
-database_close()
+'''
+mysql> select Lat,Lon from Node where NodeID = 3949788227;
++-----------+------------+
+| Lat       | Lon        |
++-----------+------------+
+| 31.218899 | 121.413458 |
++-----------+------------+
+1 row in set (0.00 sec)
+'''
 
 
 
+'''
+Lat: 31.218899
+Lon: 121.413458
 
+radius: 0.03 km
+speed: 0 ms
+nodes: 2 nodes
 
+radius: 0.1 km
+speed: 0.134 s
+size: 91 nodes
 
+radius: 1 km 
+speed: 0.484 s
+size: 7391 nodes
+
+radius: 10 km
+speed: 25.558 s
+size: 369236 nodes
+
+'''
 
 
 """
