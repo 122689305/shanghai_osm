@@ -106,7 +106,7 @@ def parse_and_insert(filename):
                 tag_data[tag.get('k')] = tag.get('v')
                 if tag.get('k') == 'name':
                     name = connection.escape(tag.get('v'))
-                    isPOI = True
+                isPOI = True
             tag_data = connection.escape(json.dumps(tag_data))
 
             node_id = int(element.get('id'))
