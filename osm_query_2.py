@@ -1,34 +1,79 @@
-import MySQLdb as mysql
-import time
+#! python3
+# -*- coding=utf-8 -*-
+import pymysql
+import datetime
 
-conn = None
-cur = None
+def get_database_connection():
+    f = open('config/default.ini')
+    (host, port, user, password) = tuple([word.strip() for word in f.readlines()])
+    port = int(port)
+    print (host, port, user, password)
+    return pymysql.connect(host=host,
+                             user=user,
+                             password=password,
+                             db='ShanghaiOsm',
+                             charset='utf8mb4',
+                             port=port,
+                             cursorclass=pymysql.cursors.DictCursor)
 
-def database_connect():
-	global conn, cur
-	conn = mysql.connect(host='localhost', user='root', passwd='0719', charset='utf8')
-	cur = conn.cursor()
-	cur.execute('set names utf8')
+if __name__ == '__main__':
+    print('start')
+    begin_mtime = datetime.datetime.now()
+    connection =  get_database_connection()
+    cursor = connection.cursor()
+    print('connected')
 
-def database_init():
-	conn.select_db('shanghai_osm')
+    # set default WayID as test
+    WayID = 234483672
+    # TODO: accept the query as longitude and latitude or as the id of the way
 
-def database_close():
-	conn.commit()
-	cur.close()
-	conn.close()
+    cursor.execute('select * from (select NodeID from WayNode where WayID=%d) AS tmp natural join Node'%WayID)
+    node_list = cursor.fetchall()
+    print('%d nodes'%len(node_list))
+    for r in node_list:
+        r.pop('WayID')
+        for item in r.items():
+            print(item)
+        print('')
 
-database_connect()
-database_init()
+    # TODO: do we need to attach the tag info to the way?
+    # Done
 
-# set default way_id as test
-way_id = 1
-# TODO: accept the query as longitude and latitude or as the id of the way
+    print(datetime.datetime.now() - begin_mtime)
 
-cur.execute('select id, lat, lon from node RIGHT JOIN (\
-	select node_id from way_node where way_id = %s) ON id = node_id', way_id)
-print 'node_id\t\tlat\t\tlon'
-for r in cur.fetchall():
-	print '%s\t\t%d\t\t%d'%(r['id'],r['lat'],r['lon']
 
-database_close()
+'''
+mysql> select cnt, WayID from (select count(*) as cnt, WayID from WayNode where nodeid > 0 group by WayID) as cnt_table order by cnt desc limit 10;
++------+-----------+
+| cnt  | WayID     |
++------+-----------+
+| 1661 | 234483672 |
+| 1655 | 315526620 |
+| 1385 | 234063306 |
+| 1320 | 293268375 |
+| 1198 | 370259506 |
+| 1137 | 110408632 |
+| 1073 | 243606024 |
+|  918 | 259877120 |
+|  889 |   4536635 |
+|  861 | 334982626 |
++------+-----------+
+10 rows in set (0.80 sec)
+
+mysql> select cnt, WayID from (select count(*) as cnt, WayID from WayNode group by WayID) as cnt_table order by cnt desc limit 10;
++------+-----------+
+| cnt  | WayID     |
++------+-----------+
+| 2567 | 234483672 |
+| 2152 | 370259506 |
+| 2039 | 315526620 |
+| 1392 | 234063306 |
+| 1375 | 293268375 |
+| 1143 | 110408632 |
+| 1133 | 243557475 |
+| 1075 | 243606024 |
+| 1072 | 259877120 |
+| 1027 | 364661234 |
++------+-----------+
+10 rows in set (0.53 sec)
+'''

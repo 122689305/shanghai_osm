@@ -1,5 +1,7 @@
+#! python3
+# -*- coding=utf-8 -*-
 import pymysql
-import time
+import datetime
 
 def get_database_connection():
     f = open('config/default.ini')
@@ -16,7 +18,7 @@ def get_database_connection():
 
 if __name__ == '__main__':
     print('start')
-    begin_time = time.time()
+    begin_mtime = datetime.datetime.now()
     connection =  get_database_connection()
     cursor = connection.cursor()
     print('connected')
@@ -25,7 +27,7 @@ if __name__ == '__main__':
     node_id = 3949788227
     # TODO: accept the query as longitude and latitude or as the id of the node
 
-    cursor.execute('select * from (select * from WayNode where NodeID=%d) AS tmp natural join Way'%node_id)
+    cursor.execute('select * from (select WayID from WayNode where NodeID=%d) AS tmp natural join Way'%node_id)
     way_list = cursor.fetchall()
     print('%d ways'%len(way_list))
     if len(way_list) > 1:
@@ -34,12 +36,12 @@ if __name__ == '__main__':
         r.pop('NodeID')
         for item in r.items():
             print(item)
-        print()
+        print('')
 
     # TODO: do we need to attach the tag info to the way?
     # Done
 
-    print(time.strftime('%H:%M:%S', time.gmtime(time.time()-begin_time)))
+    print(datetime.datetime.now() - begin_mtime)
 
 
 

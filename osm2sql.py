@@ -86,7 +86,7 @@ def parse_and_insert(filename):
     disable_index(tables)
     table_node = []
     count_node = 0
-    table_node_tag = []
+    table_node_tag = {}
     count_node_tag = 0
     table_way = []
     count_way = 0
@@ -101,10 +101,9 @@ def parse_and_insert(filename):
             # print(etree.tostring(element))
             isPOI = False
             name = 'Null'
-            tag_data = []
+            tag_data = {}
             for tag in element.getchildren():
-                tag_data.append({tag.get('k'):
-                                 tag.get('v')})
+                tag_data[tag.get('k')] = tag.get('v')
                 if tag.get('k') == 'name':
                     name = connection.escape(tag.get('v'))
                     isPOI = True
@@ -123,12 +122,11 @@ def parse_and_insert(filename):
 
         elif element.tag == 'way':
             way_id = int(element.get('id'))
-            tag_data = []
+            tag_data = {}
             name = 'Null'
             for tag in element.getchildren():
                 if tag.tag == 'tag':
-                    tag_data.append({tag.get('k'):
-                                     tag.get('v')})
+                    tag_data[tag.get('k')] = tag.get('v')
                     if tag.get('k') == 'name':
                         name = connection.escape(tag.get('v'))
             tag_data = connection.escape(json.dumps(tag_data))
