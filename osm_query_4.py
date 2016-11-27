@@ -29,26 +29,28 @@ if __name__ == '__main__':
 
     cursor.execute('SET @latpoint=%f, @longpoint=%f, @r=%f, @units=111.045'%(location['Lat'], location['Lon'], radius) )
     cursor.execute('''
-    SELECT NodeID, Lat, Lon, Name, TagData,
-            @units * DEGREES( ACOS(
-                       COS(RADIANS(@latpoint)) 
-                     * COS(RADIANS(Lat)) 
-                     * COS(RADIANS(@longpoint) - RADIANS(Lon)) 
-                     + SIN(RADIANS(@latpoint)) 
-                     * SIN(RADIANS(Lat)))) AS distance
-    FROM Node
-    WHERE MbrContains(ST_GeomFromText (
-            CONCAT('LINESTRING(',
-                  @latpoint-(@r/@units),' ',
-                  @longpoint-(@r /(@units* COS(RADIANS(@latpoint)))),
-                  ',', 
-                  @latpoint+(@r/@units) ,' ',
-                  @longpoint+(@r /(@units * COS(RADIANS(@latpoint)))),
-                  ')')),  Pos)
-      AND IsPOI = True
-    HAVING distance < @r
-    ORDER BY distance DESC
-    ''')
+      SELECT NodeID, Lat, Lon, Name, TagData FROM (
+        SELECT NodeID, Lat, Lon, Name, TagData,
+                @units * DEGREES( ACOS(
+                           COS(RADIANS(@latpoint)) 
+                         * COS(RADIANS(Lat)) 
+                         * COS(RADIANS(@longpoint) - RADIANS(Lon)) 
+                         + SIN(RADIANS(@latpoint)) 
+                         * SIN(RADIANS(Lat)))) AS distance
+        FROM Node
+        WHERE MbrContains(ST_GeomFromText (
+                CONCAT('LINESTRING(',
+                      @latpoint-(@r/@units),' ',
+                      @longpoint-(@r /(@units* COS(RADIANS(@latpoint)))),
+                      ',', 
+                      @latpoint+(@r/@units) ,' ',
+                      @longpoint+(@r /(@units * COS(RADIANS(@latpoint)))),
+                      ')')),  Pos)
+          AND IsPOI = True
+        ) as d
+      WHERE distance < @r
+      ORDER BY distance DESC
+      ''')
 
     node_list = cursor.fetchall()
     print('search Lat:%f Lon:%f with raidus %f km'%(location['Lat'], location['Lon'], radius))
@@ -94,7 +96,7 @@ size: 369236 nodes
 '''
 
 '''
-optimized query:
+optimized query (with having and predefined variables):
 
 Lat: 31.218899
 Lon: 121.413458
@@ -114,10 +116,30 @@ size: 7391 nodes
 radius: 10 km
 speed: 49.272 s
 size: 369236 nodes
-
-
 '''
 
+'''
+optimized query (with predefined variables):
+
+Lat: 31.218899
+Lon: 121.413458
+
+radius: 0.03 km
+speed: 0.014 ms
+nodes: 2 nodes
+
+radius: 0.1 km
+speed: 0.03 s
+size: 91 nodes
+
+radius: 1 km 
+speed: 0.756 s
+size: 7391 nodes
+
+radius: 10 km
+speed: 26.954 s
+size: 369236 nodes
+'''
 
 """
 There are no geospatial extension functions in MySQL supporting latitude / longitude distance computations.
