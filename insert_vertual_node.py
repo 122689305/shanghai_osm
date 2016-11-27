@@ -51,7 +51,7 @@ if __name__ == '__main__':
                     virtual_nodes.append((-count, Node2Pos[v[i][1]][0] + step_lat * (j + 1), Node2Pos[v[i][1]][1] + step_lon * (j + 1)))
                     way_virtual_node.append((k, -count))
                     count += 1
-    virtual_nodes = ['({0:d},{1:f},{1:f},POINT({1:f}, {1:f}),\'[]\')'.format(*i) for i in virtual_nodes]
+    virtual_nodes = ['({0:d},{1:f},{2:f},POINT({1:f}, {1:f}),\'[]\')'.format(*i) for i in virtual_nodes]
     way_virtual_node = ['(%d,%d,-1)' % i for i in way_virtual_node]
     cursor.execute('LOCK TABLES Node WRITE, WayNode WRITE')
     cursor.execute('/*!40000 ALTER TABLE `Node` DISABLE KEYS */')
