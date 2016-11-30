@@ -41,7 +41,7 @@ def create_tables():
         cursor.execute('create table WayNode(\
                         WayID BIGINT not null, INDEX(WayID),\
                         NodeID BIGINT not null, INDEX(NodeID),\
-                        OrderNum INT not null,\
+                        OrderNum FLOAT not null,\
                         foreign key(WayID) references Way(WayID),\
                         foreign key(NodeID) references Node(NodeID)\
                         ) ENGINE=MyISAM')
@@ -95,7 +95,6 @@ def parse_and_insert(filename):
     table_way_node = []
     count_way_node = 0
 
-
     for event, element in etree.iterparse(filename):
         if element.tag == 'node':
             # print(etree.tostring(element))
@@ -117,7 +116,7 @@ def parse_and_insert(filename):
                                tag_data,
                                name,
                                isPOI
-            ))
+                               ))
             element.clear()
 
         elif element.tag == 'way':
@@ -130,7 +129,7 @@ def parse_and_insert(filename):
                     if tag.get('k') == 'name':
                         name = connection.escape(tag.get('v'))
             tag_data = connection.escape(json.dumps(tag_data))
-                    
+
             table_way.append((way_id, tag_data, name))
             # table_way_tag.append((way_id,
             #                       connection.escape_string(tag.get('k')),
@@ -174,51 +173,52 @@ def parse_and_insert(filename):
             sys.stdout.flush()
             table_way_node = []
 
-    if len(table_node) > 0 :
+    if len(table_node) > 0:
         insert('Node', 'insert into Node(NodeID, Lat, Lon, Pos, TagData, Name, IsPOI) values ', '(%d, %f, %f, %s, %s, %s, %d)', table_node)
         count_node += len(table_node)
         print('insert table node %d' % count_node)
         sys.stdout.flush()
-    if len(table_way) > 0 :
+    if len(table_way) > 0:
         insert('Way', 'insert into Way(WayID, TagData, Name) values ', '(%d, %s, %s)', table_way)
         count_way += len(table_way)
         print('insert table way %d' % count_way)
         sys.stdout.flush()
-    if len(table_way_node) > 0 :
+    if len(table_way_node) > 0:
         insert('WayNode', 'insert into WayNode(WayID, NodeID, OrderNum) values ', '(%d, %d, %d)', table_way_node)
         count_way_node += len(table_way_node)
         print('insert table way_node %d' % count_way_node)
         sys.stdout.flush()
-        
+
     print('parse table way done')
     print('parse table way_tag done')
     print('parse table way_node done')
     enable_index(tables)
     # create_index(index_tables)
 
+
 def get_database_connection():
     f = open('config/default.ini')
     (host, port, user, password) = tuple([word.strip() for word in f.readlines()])
     port = int(port)
-    print (host, port, user, password)
+    print(host, port, user, password)
     return pymysql.connect(host=host,
-                             user=user,
-                             password=password,
-                             db='ShanghaiOsm',
-                             charset='utf8mb4',
-                             port=port,
-                             cursorclass=pymysql.cursors.DictCursor)
+                           user=user,
+                           password=password,
+                           db='ShanghaiOsm',
+                           charset='utf8mb4',
+                           port=port,
+                           cursorclass=pymysql.cursors.DictCursor)
 
 if __name__ == '__main__':
     print('start')
-    connection =  get_database_connection()
+    connection = get_database_connection()
     cursor = connection.cursor()
     print('connected')
-    # create_tables()
+    create_tables()
     begin_time = time.time()
     print('loaded')
-    # parse_and_insert('shanghai_dump.osm')
+    parse_and_insert('shanghai_dump.osm')
 
     cursor.close()
     connection.close()
-    print(time.strftime('%H:%M:%S', time.gmtime(time.time()-begin_time)))
+    print(time.strftime('%H:%M:%S', time.gmtime(time.time() - begin_time)))
