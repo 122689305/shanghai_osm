@@ -197,7 +197,7 @@ def parse_and_insert(filename):
 
 
 def get_database_connection():
-    f = open('config/default.ini')
+    f = open('config/zp.ini')
     (host, port, user, password) = tuple([word.strip() for word in f.readlines()])
     port = int(port)
     print(host, port, user, password)
