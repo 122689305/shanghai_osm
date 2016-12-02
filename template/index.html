@@ -18,44 +18,29 @@
     text-align:center;
     padding:1px;
 }
-#nav {
-    line-height:30px;
-    background-color:#eeeeee;
-    opacity:0.6;
-    height:100%;
-    width:200px;
-    float:left;
-    padding:5px;        
-}
 #footer {
     background-color:gray;
     color:white;
     clear:both;
     text-align:center;
     height: 30px;
-  padding: 5px;
-  
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  clear:both; 
+    padding: 5px;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    clear:both; 
 }
 /*body{height:100%; overflow:hidden; margin:0px; padding:0px;}*/
-
 </style>
 </head>
 
 
 <body>
-
 <div id="header">
 <h1>Dream Team Work</h1>
 </div>
 
-
-
 <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
-
 
   <div class="panel panel-default">
     <div class="panel-heading" role="tab" id="headingOne">
@@ -80,19 +65,14 @@
                 <button class="btn btn-default" type="button" id="button1" value="query1" >find!</button>
               </span>
 
-            
             </div><!-- /input-group -->
           </div><!-- /.col-lg-6 -->
           <table id="table1" class="table table-striped">
           </table>
 
       </div>
-  
-
     </div>
   </div>
-
-
 
   <div class="panel panel-default">
     <div class="panel-heading" role="tab" id="headingTwo">
@@ -113,12 +93,11 @@
                 <input type="text" class="form-control" id="input2" name="input2" placeholder="请输入way_id">
               </div>
               </div> 
-              <!-- <input type="text" class="form-control" id="input2" name="input2"> -->
+
               <span class="input-group-btn">
                 <button class="btn btn-default" type="button" id="button2" value="query2">find!</button>
               </span>
 
-            
             </div><!-- /input-group -->
           </div><!-- /.col-lg-6 -->
           <table id="table2" class="table table-striped">
@@ -147,12 +126,11 @@
                 <input type="text" class="form-control" id="input3" name="input3" placeholder="请输入way_name">
               </div>
               </div> 
-              <!-- <input type="text" class="form-control" id="input3" name="input3"> -->
+
               <span class="input-group-btn">
                 <button class="btn btn-default" type="button" id="button3" value="query3">find!</button>
               </span>
 
-            
             </div><!-- /input-group -->
           </div><!-- /.col-lg-6 -->
           <table id="table3" class="table table-striped">
@@ -174,8 +152,6 @@
     <div id="collapseFour" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingFour">
       <div class="panel-body">
 
-
-
           <div class="col-lg-6">
             <div class="input-group">
 
@@ -187,6 +163,7 @@
               </div>
               <br/> 
               <br/> 
+
               <div class="form-group"> 
               <label for="label4" class="col-sm-2 control-label">请输入lon</label> 
               <div class="col-sm-10">
@@ -202,9 +179,7 @@
                 <input type="text" class="form-control" id="input4_r" name="input4_r" placeholder="请输入input4_r">
               </div>
               </div> 
-<!--               <input style="float:left" type="text" class="form-control" id="input4_lat" name="input4_lat">
-              <input style="float:left" type="text" class="form-control" id="input4_lon" name="input4_lon">
-              <input style="float:left" type="text" class="form-control" id="input4_r" name="input4_r"> -->
+
               <span class="input-group-btn">
                 <button class="btn btn-default" type="button" id="button4" value="query4">find!</button>
               </span>
@@ -238,7 +213,8 @@
               </div>
               </div> 
               <br/> 
-              <br/>               
+              <br/>  
+
               <div class="form-group"> 
               <label for="label5" class="col-sm-2 control-label">请输入lon</label> 
               <div class="col-sm-10">
@@ -246,12 +222,10 @@
               </div>
               </div> 
 
-
               <span class="input-group-btn">
                 <button class="btn btn-default" type="button" id="button5" value="query5">find!</button>
               </span>
-
-            
+           
             </div><!-- /input-group -->
           </div><!-- /.col-lg-6 -->
           <table id="table5" class="table table-striped">
@@ -281,7 +255,8 @@
               </div>
               </div> 
               <br/> 
-              <br/>               
+              <br/>
+
               <div class="form-group"> 
               <label for="label6" class="col-sm-2 control-label">请输入input6_lon0</label> 
               <div class="col-sm-10">
@@ -289,7 +264,8 @@
               </div>
               </div> 
               <br/> 
-              <br/>               
+              <br/>   
+
               <div class="form-group"> 
               <label for="label6" class="col-sm-2 control-label">请输入input6_lat1</label> 
               <div class="col-sm-10">
@@ -297,7 +273,8 @@
               </div>
               </div> 
               <br/> 
-              <br/>               
+              <br/>  
+
               <div class="form-group"> 
               <label for="label6" class="col-sm-2 control-label">请输入input6_lon1</label> 
               <div class="col-sm-10">
@@ -309,7 +286,6 @@
                 <button class="btn btn-default" type="button" id="button6" value="query6">find!</button>
               </span>
 
-            
             </div><!-- /input-group -->
           </div><!-- /.col-lg-6 -->
 
@@ -320,9 +296,6 @@
     </div>
   </div>
 
-
-
-
 </div>
 <div id="footer">
 Dream Team TYC JYT ZP
@@ -332,11 +305,15 @@ Dream Team TYC JYT ZP
 <script>
 
 $("#button1").click(function() {
+    
     var value = document.getElementById("input1").value;
-    console.log("button click");
+    // console.log("button click");
+    var st=new Date().getTime();
     $.getJSON("/1", {
         "id": value
     },  function(json) {  
+        var st2=new Date().getTime() - st;
+        st2 = st2/1000;
         var  htmls = ['<br/><table>'];  
         htmls.push('<tr>');  
         for (var  k  in  json[0])  htmls.push('<td>' + k + '</td>');  
@@ -347,18 +324,19 @@ $("#button1").click(function() {
             htmls.push('</tr>');  
         }  
         htmls.push('</table>');  
-        console.log(htmls); 
+        htmls.push('<br/><pre>查询时间：'+st2+ '秒</pre>'); 
+        // console.log(htmls); 
         $('#table1').html(htmls.join(''));
-        // jQuery("#coutx").load('http://localhost:8080/1', value);
-        
     })});
 
 $("#button2").click(function() {
     var value = document.getElementById("input2").value;
-    // console.log("button click");
+    var st=new Date().getTime();
     $.getJSON("/2", {
         "id": value
     },  function(json) {  
+      var st2=new Date().getTime() - st;
+      st2 = st2/1000;
         var  htmls = ['<br/><table>'];  
         htmls.push('<tr>');  
         for (var  k  in  json[0])  htmls.push('<td>' + k + '</td>');  
@@ -369,18 +347,19 @@ $("#button2").click(function() {
             htmls.push('</tr>');  
         }  
         htmls.push('</table>');  
-        console.log(htmls); 
+        htmls.push('<br/><pre>查询时间：'+st2+ '秒</pre>'); 
+        // console.log(htmls); 
         $('#table2').html(htmls.join(''));
-        // jQuery("#coutx").load('http://localhost:8080/1', value);
-        
     })});
 
 $("#button3").click(function() {
     var value = document.getElementById("input3").value;
-    console.log("button click");
+    var st=new Date().getTime();
     $.getJSON("/3", {
         "name": value
     },  function(json) {  
+      var st2=new Date().getTime() - st;
+      st2 = st2/1000;
         var  htmls = ['<br/><table>'];  
         htmls.push('<tr>');  
         for (var  k  in  json[0])  htmls.push('<td>' + k + '</td>');  
@@ -391,22 +370,24 @@ $("#button3").click(function() {
             htmls.push('</tr>');  
         }  
         htmls.push('</table>');  
-        console.log(htmls); 
+        htmls.push('<br/><pre>查询时间：'+st2+ '秒</pre>'); 
+        // console.log(htmls); 
         $('#table3').html(htmls.join(''));
-        // jQuery("#coutx").load('http://localhost:8080/1', value);
-        
     })});
 
 $("#button4").click(function() {
     var value1 = document.getElementById("input4_lat").value;
     var value2 = document.getElementById("input4_lon").value;
     var value3 = document.getElementById("input4_r").value;
-    console.log("button click");
+    var st=new Date().getTime();
+
     $.getJSON("/4", {
         "lat": value1,
         "lon": value2,
         "r": value3
     },  function(json) {  
+      var st2=new Date().getTime() - st; 
+      st2 = st2/1000; 
         var  htmls = ['<br/><table>'];  
         htmls.push('<tr>');  
         for (var  k  in  json[0])  htmls.push('<td>' + k + '</td>');  
@@ -417,21 +398,24 @@ $("#button4").click(function() {
             htmls.push('</tr>');  
         }  
         htmls.push('</table>');  
-        console.log(htmls); 
+        htmls.push('<br/><pre>查询时间：'+st2+ '秒</pre>'); 
+        // console.log(htmls); 
         $('#table4').html(htmls.join(''));
-        // jQuery("#coutx").load('http://localhost:8080/1', value);
-        
     })});
 
 
 $("#button5").click(function() {
     var input5_lat = document.getElementById("input5_lat").value;
     var input5_lon = document.getElementById("input5_lon").value;
-    console.log("button click");
+
+    var st=new Date().getTime();
+    // console.log("button click");
     $.getJSON("/5", {
         "lat": input5_lat,
         "lon": input5_lon
     },  function(json) {  
+      var st2=new Date().getTime() - st;
+      st2 = st2/1000;
       console.log(json);
         var  htmls = ['<br/><table>'];  
         htmls.push('<tr>');  
@@ -441,10 +425,8 @@ $("#button5").click(function() {
             for (var  k  in  json)  htmls.push('<td>' + json[k] + '</td>');     
             htmls.push('</tr>');  
         htmls.push('</table>');  
-        
+        htmls.push('<br/><pre>查询时间：'+st2+ '秒</pre>'); 
         $('#table5').html(htmls.join(''));
-        // jQuery("#coutx").load('http://localhost:8080/1', value);
-        
     })});
 
 
@@ -452,36 +434,28 @@ $("#button6").click(function() {
     var value1 = document.getElementById("input6_lat0").value;
     var value2 = document.getElementById("input6_lon0").value;
     var value3 = document.getElementById("input6_lat1").value;
-    var value4 = document.getElementById("input6_lon1").value;    
-    console.log("button click");
+    var value4 = document.getElementById("input6_lon1").value;
+    var st=new Date().getTime();
+    
+    // console.log("button click");
     $.get("/6", {
         "lat0": value1,
         "lon0": value2,
         "lat1": value3,
         "lon1": value4        
     },  function(data) { 
-        console.log(data); 
+      var st2=new Date().getTime() - st;
+      st2 = st2/1000;
+        // console.log(data); 
         var  htmls = ['<table>'];  
-        // htmls.push('<tr>');  
-        // for (var  k  in  data)  htmls.push('<td>' + k + '</td>');  
-        // htmls.push('</tr>');  
-
-
-        htmls.push('<br/><pre>'+data+ '</pre>');  
-
-        
-        // htmls.push('<tr>');    
-        // for (var  k  in  data)  htmls.push('<td>' + data[k] + '</td>');     
-        // htmls.push('</tr>');  
-        
+        htmls.push('<br/><pre>'+data+ '</pre>'); 
+        htmls.push('<br/><pre>查询时间：'+st2+ '秒</pre>'); 
         htmls.push('</table>');  
-        console.log(htmls); 
+         
+        // console.log(htmls); 
         $('#table6').html(htmls.join(''));
-        // jQuery("#coutx").load('http://localhost:8080/1', value);
-        
     })});
 
 </script>
-
 
 </body>
